@@ -6,10 +6,11 @@ float GAP = 80;
 float VEL_DAMPENING = 0.94;
 float GROUND_HEIGHT = 150;
 
+
 int score;
 boolean hoppedThrough;  // has the bird hopped through the current pipe
 boolean dead;
-float speed;  // per second
+float speed;  // how fast pipes move
 
 // Images
 PImage birdImg;
@@ -20,54 +21,66 @@ PImage pipeImg;
 // Bird
 float birdX = 100;
 float birdY;
-float velY;  // per second
-float angle;
+float velY;
+float angle;  // rotation of bird
 
 // Pipe
 float pipeX;
-float gapY;
+float gapY;  // y value of the center of the gap
 
 // Ground
 float groundY;
-float groundX;
+float groundX;  // for ground scrolling
 
 
+/*
+Create new pair of pipes with random gapY
+*/
 void resetPipe() {
   pipeX = width+PIPE_RADIUS;
   gapY = 100+random(groundY-200);
   hoppedThrough = false;
 }
 
-void restart() {
-  score = 0;
-  dead = false;
+/*
+Initialize a new game
+*/
+void newGame() {
+  score = 0;  // reset score to zero
+  dead = false;  // not dead anymore
   speed = 8;
   
-  birdY = 100;
-  velY = 0;
+  birdY = 100;  // make sure bird is well above the ground
+  velY = 0;  // make sure bird has no y-velocity yet
   
-  angle = 0;
+  angle = 0;  // reset bird rotation
   
-  resetPipe();
+  resetPipe();  // create pipe obstacle
 }
 
+/*
+Add 1 to score when bird hops through the gap
+*/
 void hopThrough() {
   score += 1;
   hoppedThrough = true;
-  speed += .1;
+  speed += .1;  // increase speed as the player gets more points
 }
 
 
 void setup() {
   size(600, 600, P3D);
+  // Initialize ground x and y
   groundX = width;
   groundY = height-GROUND_HEIGHT;
   
+  // Load images
   pipeImg = loadImage("pipe.png");
   groundImg = loadImage("ground.png");
   birdImg = loadImage("bird.png");
   
-  restart();
+  // Create new game
+  newGame();
 }
 
 
@@ -85,20 +98,21 @@ void draw() {
     
     // Update pipes
     pipeX -= speed;
-    if (pipeX <= -PIPE_RADIUS)
+    if (pipeX <= -PIPE_RADIUS) // When pipe moves off the screen to the left, reset it to the other side of the screen
       resetPipe();
     
     // Update bird
-    birdY += GRAVITY;
-    birdY += velY;
-    velY *= VEL_DAMPENING;
+    birdY += GRAVITY;  // move down by GRAVITY
+    birdY += velY;  // add velocity to y
+    velY *= VEL_DAMPENING;  // dampen velocity
+    angle += .025;  // rotate bird clockwise
     
-    angle += .03;
-    
+    // Add point when the bird gets through the gap
     if (!hoppedThrough && birdX > pipeX) {
       hopThrough();
     }
     
+    // Bird dies if it hits the pipe
     float radius = PIPE_RADIUS+BIRD_RADIUS;
     float upper = gapY-GAP;
     float lower = gapY+GAP;
@@ -108,16 +122,12 @@ void draw() {
       }
     }
     
+    // Bird dies if it hits the ground
     if (birdY+BIRD_RADIUS > groundY) {
       dead = true;
     }
     
-    noStroke();
-    
     // Draw pipes
-    //fill(0,255,0);
-    //rect(pipeX-PIPE_RADIUS, 0, PIPE_RADIUS*2, gapY-GAP);
-    //rect(pipeX-PIPE_RADIUS, gapY+GAP, PIPE_RADIUS*2, height-gapY-GAP);
     imageMode(CORNER);
     pushMatrix();
     translate(pipeX-PIPE_RADIUS, gapY-GAP);
@@ -127,15 +137,11 @@ void draw() {
     image(pipeImg, pipeX-PIPE_RADIUS, gapY+GAP);
     
     // Draw ground
-    //fill(0,255,0);
-    //rect(0,groundY, width,GROUND_HEIGHT);
     imageMode(CORNER);
     image(groundImg, groundX-width, groundY);
     image(groundImg, groundX, groundY);
     
     // Draw bird
-    //fill(255,0,0);
-    //ellipse(birdX, birdY, BIRD_RADIUS*2, BIRD_RADIUS*2);
     imageMode(CENTER);
     pushMatrix();
     translate(birdX, birdY);
@@ -150,6 +156,9 @@ void draw() {
   }
 }
 
+/*
+Set bird's y-velocity and angle to jumping state
+*/
 void jump() {
   velY = -30;
   angle = -PI/4;
@@ -158,7 +167,7 @@ void jump() {
 void keyPressed() {
   if (key == ' ' || keyCode == UP) {
     if (dead) {
-      restart();
+      newGame();
     } else {
       jump();
     }
