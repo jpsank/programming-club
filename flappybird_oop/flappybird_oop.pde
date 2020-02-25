@@ -8,7 +8,7 @@ PImage PIPE_IMG;
 
 
 void setup() {
-  size(600, 600, P3D);
+  size(600,600,P3D);
   
   // Load images
   PIPE_IMG = loadImage("pipe.png");
